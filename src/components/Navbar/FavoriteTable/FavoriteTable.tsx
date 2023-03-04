@@ -1,28 +1,21 @@
-import { Checkbox } from '@mui/material'
+import { Delete } from '@mui/icons-material'
+import { IconButton } from '@mui/material'
 import { DataGrid, type GridRenderCellParams } from '@mui/x-data-grid'
-import React, { useState } from 'react'
+import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 
 import { type Person } from '@/models'
-import { addFavorite } from '@/redux/states'
+import { removeFavorite } from '@/redux/states'
 import { type AppStore } from '@/redux/store'
 
-const PeopleTable: React.FC<{}> = () => {
-  const [selectedPeople, setSelectedPeople] = useState<Person[]>([])
+const FavoriteTable: React.FC<{}> = () => {
   const pageSize = 5
   const dispatch = useDispatch()
-  const statePeople = useSelector((store: AppStore) => store.people)
-  const favoritePeople = useSelector((store: AppStore) => store.favorites)
+  const stateFavorites = useSelector((store: AppStore) => store.favorites)
 
-  const findPerson = (person: Person): boolean => !!favoritePeople.find(p => p.id === person.id)
-  const filterPerson = (person: Person): Person[] => favoritePeople.filter(p => p.id !== person.id)
-
-  const handleChange = (person: Person): void => {
-    const filteredPeople = findPerson(person) ? filterPerson(person) : [...selectedPeople, person]
-    dispatch(addFavorite(filteredPeople))
-    setSelectedPeople(filteredPeople)
+  const handleClick = (person: Person): void => {
+    dispatch(removeFavorite(person))
   }
-
   const columns = [
     {
       field: 'actions',
@@ -30,9 +23,22 @@ const PeopleTable: React.FC<{}> = () => {
       sortable: false,
       headerName: '',
       width: 50,
-      renderCell: (params: GridRenderCellParams) => <>
-                <Checkbox size="small" checked={findPerson(params.row)} onChange={() => { handleChange(params.row) }}/>
-            </>
+      renderCell: (params: GridRenderCellParams) => (
+        <>
+          {
+            <IconButton
+              color="secondary"
+              aria-label="favorites"
+              component="label"
+              onClick={() => {
+                handleClick(params.row)
+              }}
+            >
+              <Delete />
+            </IconButton>
+          }
+        </>
+      )
     },
     {
       field: 'name',
@@ -58,10 +64,12 @@ const PeopleTable: React.FC<{}> = () => {
       headerName: 'Level of happiness',
       flex: 1,
       renderCell: (params: GridRenderCellParams) => <>{params.value}</>
-    }]
+    }
+  ]
 
-  return <DataGrid
-      rows={statePeople}
+  return (
+    <DataGrid
+      rows={stateFavorites}
       columns={columns}
       disableColumnSelector
       disableSelectionOnClick
@@ -69,7 +77,8 @@ const PeopleTable: React.FC<{}> = () => {
       pageSize={pageSize}
       rowsPerPageOptions={[pageSize]}
       getRowId={(row: any) => row.id}
-  />
+    />
+  )
 }
 
-export default PeopleTable
+export default FavoriteTable
